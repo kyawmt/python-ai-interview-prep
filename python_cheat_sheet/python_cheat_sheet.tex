@@ -1,0 +1,790 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[a4paper,top=0.45cm,bottom=0.55cm,left=0.62cm,right=0.62cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{multicol}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[explicit]{titlesec}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{microtype}
+\usepackage{needspace}
+\usepackage{amsmath}
+
+\definecolor{Navy}{HTML}{16324F}
+\definecolor{Blue}{HTML}{22577A}
+\definecolor{PaleBlue}{HTML}{EAF3F8}
+\definecolor{CodeBg}{HTML}{F4F6F8}
+\definecolor{CodeFrame}{HTML}{D9E0E5}
+\definecolor{CodeGreen}{HTML}{357A38}
+\definecolor{CodePurple}{HTML}{7A3E9D}
+\definecolor{CodeGray}{HTML}{66727A}
+\definecolor{Warn}{HTML}{8A3B12}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[C]{\color{CodeGray}\fontsize{8}{9}\selectfont Python 3.12+ Quick Reference \textbullet\ \thepage}
+\setlength{\footskip}{0.42cm}
+
+\setlength{\columnsep}{0.42cm}
+\setlength{\columnseprule}{0.15pt}
+\def\columnseprulecolor{\color{CodeFrame}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.9pt}
+\setlist{nosep,leftmargin=1.15em,labelsep=.35em,topsep=1pt}
+\raggedcolumns
+
+\titleformat{\section}
+  {\needspace{4\baselineskip}\bfseries\color{white}\fontsize{11.2}{12.2}\selectfont}
+  {}{0pt}{\colorbox{Navy}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\strut#1}}}
+\titlespacing*{\section}{0pt}{4.5pt}{2.2pt}
+\titleformat{\subsection}
+  {\needspace{3\baselineskip}\bfseries\color{Blue}\fontsize{10}{11}\selectfont}
+  {}{0pt}{#1}
+\titlespacing*{\subsection}{0pt}{3pt}{1pt}
+
+\lstdefinestyle{python}{
+  language=Python,
+  basicstyle=\ttfamily\fontsize{10}{10.7}\selectfont,
+  keywordstyle=\bfseries\color{Blue},
+  commentstyle=\itshape\color{CodeGreen},
+  stringstyle=\color{CodePurple},
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  breakatwhitespace=true,
+  upquote=true,
+  backgroundcolor=\color{CodeBg},
+  frame=single,
+  rulecolor=\color{CodeFrame},
+  framerule=0.25pt,
+  framesep=1.5pt,
+  xleftmargin=1pt,
+  xrightmargin=1pt,
+  aboveskip=1.0pt,
+  belowskip=1.0pt,
+  tabsize=4
+}
+\lstset{style=python}
+
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{R}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\py}[1]{\texttt{#1}}
+\newcommand{\hint}[1]{\textcolor{CodeGray}{#1}}
+\newcommand{\warn}[1]{\textcolor{Warn}{\bfseries #1}}
+\newsavebox{\tblbox}
+\newenvironment{tbl}{\par\begin{lrbox}{\tblbox}\begin{minipage}{\linewidth}\compacttable}%
+  {\end{minipage}\end{lrbox}\noindent\raisebox{\dp\tblbox}{\usebox{\tblbox}}\par}
+\newcommand{\compacttable}{\fontsize{10}{11.2}\selectfont\setlength{\tabcolsep}{2.5pt}\renewcommand{\arraystretch}{1.08}}
+
+\begin{document}
+
+\begin{center}
+  {\color{Navy}\bfseries\fontsize{16}{17}\selectfont PYTHON 3.12+ CHEAT SHEET}\par
+  \vspace{1pt}
+  {\color{CodeGray}\fontsize{9}{10}\selectfont Practical syntax, idioms, and standard-library patterns for everyday programming}
+\end{center}
+\vspace{-3pt}
+
+\begin{multicols}{2}
+
+\section{1. Python Basics}
+
+\begin{lstlisting}
+# comment; names bind to objects
+x, name, active = 42, "Ada", True
+a = b = 0                 # multiple assignment
+missing = None            # absence of a value
+\end{lstlisting}
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.28\linewidth}L@{}}
+\toprule
+\textbf{Type} & \textbf{Typical literal / conversion} \\
+\midrule
+\py{int}, \py{float}, \py{complex} & \py{12}, \py{3.5}, \py{2+3j}; \py{int("12")}, \py{float(x)} \\
+\py{bool}, \py{NoneType} & \py{True}, \py{False}, \py{None}; \py{bool(x)} \\
+\py{str}, \py{bytes} & \py{"text"}, \py{b"raw"}; \py{str(x)}, \py{bytes(s,"utf-8")} \\
+\py{list}, \py{tuple} & \py{[1,2]}, \py{(1,2)}; mutable / immutable sequence \\
+\py{dict}, \py{set} & \py{\{"a":1\}}, \py{\{1,2\}}; mapping / unique values \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\begin{lstlisting}
+type(x) is int                 # exact type
+isinstance(x, (int, float))    # type or subclass
+a == b                         # equal values
+a is b                         # identical object (use: x is None)
+\end{lstlisting}
+
+\textbf{Falsy:} \py{False}, \py{None}, numeric zero, and empty strings/containers. Everything else is truthy.
+
+\section{2. Strings}
+
+Strings are immutable Unicode sequences; operations return new strings.
+
+\begin{lstlisting}
+s = "Python"
+s[0], s[-1]        # ('P', 'n')
+s[1:4], s[::-1]    # ('yth', 'nohtyP')
+len(s), "th" in s  # (6, True)
+\end{lstlisting}
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.46\linewidth}L@{}}
+\toprule
+\textbf{Expression} & \textbf{Result / purpose} \\
+\midrule
+\py{s.split(",")} & split into a list \\
+\py{"-".join(parts)} & join strings with separator \\
+\py{s.strip()} & trim surrounding whitespace \\
+\py{s.replace("a","b")} & replace all occurrences \\
+\py{s.find("th")} & first index (\py{2}), or \py{-1} \\
+\py{s.startswith("Py")} & prefix test \\
+\py{s.endswith(".py")} & suffix test \\
+\py{s.upper()}, \py{s.lower()} & change case \\
+\py{"x" in s} & substring membership \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\begin{lstlisting}
+name, age = "Alice", 30
+f"{name} is {age} years old"
+f"{1234.5:,.2f}"       # '1,234.50'
+f"{0.875:.1%}"         # '87.5%'
+\end{lstlisting}
+
+Alignment and display: \py{f"\{x:>10\}"} (right), \py{f"\{x:<10\}"} (left), \py{f"\{x:\textasciicircum{}10\}"} (center), \py{f"\{n:08d\}"} (zero-pad), \py{f"\{x=!r\}"} (debug).
+
+\begin{lstlisting}
+message = """A multiline string
+may span several lines."""
+raw_path = r"C:\new\data"    # backslashes stay literal
+\end{lstlisting}
+
+\section{3. Numbers, Math, and Bits}
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.42\linewidth}L@{}}
+\toprule
+\textbf{Syntax} & \textbf{Meaning} \\
+\midrule
+\py{a+b}, \py{a-b}, \py{a*b}, \py{a/b} & arithmetic; \py{/} returns float \\
+\py{a//b}, \py{a\%b}, \py{a**b} & floor division, remainder, power \\
+\py{round(x, 2)}, \py{abs(x)} & round; magnitude \\
+\py{min(xs)}, \py{max(xs)}, \py{sum(xs)} & aggregate values \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\begin{lstlisting}
+import math
+math.sqrt(9); math.ceil(2.1); math.floor(2.9)
+math.isclose(a, b, rel_tol=1e-9)
+math.pi, math.e, math.log(x), math.sin(angle)
+\end{lstlisting}
+
+\py{//} and \py{\%} round toward negative infinity: \py{-7 // 2} is \py{-4} and \py{-7 \% 2} is \py{1}. \py{divmod(a, b)} returns both at once.
+
+\subsection{Bitwise operators}
+
+These act on the binary bits of an \py{int}. Python integers are signed and unbounded, so they behave like two's complement with infinite sign extension.
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.20\linewidth}L@{}}
+\toprule
+\textbf{Syntax} & \textbf{Meaning} \\
+\midrule
+\py{a \& b} & AND: 1 where both bits are 1 \\
+\py{a | b} & OR: 1 where either bit is 1 \\
+\py{a \textasciicircum{} b} & XOR: 1 where the bits differ \\
+\py{\textasciitilde{}a} & NOT: invert every bit; equals \py{-a - 1} \\
+\py{a <{}< n} & shift left; same as \py{a * 2**n} \\
+\py{a >{}> n} & shift right; same as \py{a // 2**n} \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\begin{lstlisting}
+x = 0b1010            # 10; also 0o12, 0xA, 1_000
+bin(10), hex(255)     # ('0b1010', '0xff')
+int("1010", 2)        # 10
+10 & 6, 10 | 6, 10 ^ 6      # (2, 14, 12)
+~10, 10 << 1, 10 >> 1       # (-11, 20, 5)
+(10).bit_length(), (10).bit_count()   # (4, 2)
+\end{lstlisting}
+
+\begin{lstlisting}
+mask = 1 << i        # a 1 in position i only
+n | mask             # set bit i
+n & ~mask            # clear bit i
+n ^ mask             # toggle bit i
+(n >> i) & 1         # read bit i -> 0 or 1
+n & (n - 1)          # clear the lowest set bit
+n & -n               # isolate the lowest set bit
+n > 0 and n & (n - 1) == 0    # exact power of two?
+\end{lstlisting}
+
+Bitwise operators bind tighter than comparisons but looser than arithmetic, so \py{n \& 1 == 0} groups as \py{(n \& 1) == 0}. \py{>{}>} preserves the sign and there is no unsigned \py{>{}>{}>}; mask with \py{\& 0xFF} to emulate a fixed width. For named flags, prefer \py{enum.IntFlag} over bare constants.
+
+\section{4. Lists}
+
+Mutable ordered sequences; indexing and slicing match strings.
+
+\begin{lstlisting}
+items = ["a", "b", "c"]
+items[0], items[-1], items[1:]
+items[1] = "B"; "a" in items
+empty = []; shallow = items.copy()   # shallow copy
+\end{lstlisting}
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.47\linewidth}L@{}}
+\toprule
+\textbf{Mutation} & \textbf{Effect} \\
+\midrule
+\py{xs.append(x)} & add one item at end \\
+\py{xs.extend(more)} & append all items \\
+\py{xs.insert(i,x)} & insert before index \py{i} \\
+\py{xs.remove(x)} & delete first \py{x}; raises if absent \\
+\py{x = xs.pop(i)} & delete and return item (last by default) \\
+\py{xs.clear()} & remove every item \\
+\py{xs.reverse()} & reverse in place \\
+\py{xs.sort(key=..., reverse=True)} & sort in place \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\begin{lstlisting}
+nums = [4, 1, 3, 2]
+ordered = sorted(nums)          # new list
+nums.sort(reverse=True)         # mutate nums
+even_squares = [x*x for x in nums if x % 2 == 0]
+\end{lstlisting}
+
+Useful slices: \py{xs[:n]} first $n$; \py{xs[n:]} rest; \py{xs[::2]} every other; \py{xs[::-1]} reversed copy; \py{del xs[i:j]} delete range.
+
+\section{5. Tuples and Sets}
+
+\subsection{Tuples}
+Immutable sequences are ideal for fixed records and unpacking. A one-item tuple needs a comma.
+
+\begin{lstlisting}
+point = (10, 20); single = (10,)
+x, y = point
+first, *middle, last = values
+def bounds(xs): return min(xs), max(xs)
+\end{lstlisting}
+
+\subsection{Sets}
+Mutable collections of unique hashable values; no positional indexing.
+
+\begin{lstlisting}
+a, b = {1, 2, 3}, {3, 4}
+a.add(5); a.discard(9)    # no error if absent
+a.remove(2)               # KeyError if absent
+a | b, a & b, a - b       # union, intersection, difference
+\end{lstlisting}
+
+\py{x in a} tests membership; \py{set(items)} removes duplicates (order not preserved). Use \py{frozenset(...)} for an immutable, hashable set.
+
+\section{6. Dictionaries}
+
+Mappings preserve insertion order and require hashable keys.
+
+\begin{lstlisting}
+user = {"name": "Alice", "age": 30}
+name = user["name"]             # KeyError if absent
+age = user.get("age", 0)        # safe default
+user["active"] = True           # add / update
+user.update(age=31, city="Paris")
+\end{lstlisting}
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.45\linewidth}L@{}}
+\toprule
+\textbf{Expression} & \textbf{Purpose} \\
+\midrule
+\py{k in d} & key membership \\
+\py{d.keys()}, \py{d.values()} & dynamic views \\
+\py{d.items()} & \py{(key, value)} pairs \\
+\py{d.pop(k, default)} & remove key and return value \\
+\py{del d[k]} & remove key; raises if absent \\
+\py{d.setdefault(k, v)} & get existing or insert default \\
+\py{d1 | d2} & new merged dict; right side wins \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\begin{lstlisting}
+for key, value in user.items():
+    print(key, value)
+lengths = {word: len(word) for word in words}
+merged = defaults | overrides
+\end{lstlisting}
+
+\subsection{Counting and grouped values}
+
+\begin{lstlisting}
+from collections import Counter, defaultdict
+counts = Counter(words)          # counts.most_common(3)
+groups = defaultdict(list)
+for item in rows: groups[item.key].append(item)
+\end{lstlisting}
+
+\section{7. Conditions}
+
+\begin{lstlisting}
+if score >= 90:
+    grade = "A"
+elif score >= 80:
+    grade = "B"
+else:
+    grade = "C"
+\end{lstlisting}
+
+Comparisons: \py{== != < <= > >=}; logic: \py{and or not}. Comparisons chain naturally: \py{0 <= x < 10}. Short-circuit logic can supply defaults: \py{name = supplied or "Guest"}.
+
+\begin{lstlisting}
+status = "adult" if age >= 18 else "minor"
+if ready and not cancelled:
+    run()
+\end{lstlisting}
+
+\section{8. Loops}
+
+\begin{lstlisting}
+for item in items:
+    process(item)
+for i in range(0, 10, 2):       # 0, 2, ..., 8
+    print(i)
+\end{lstlisting}
+
+\begin{lstlisting}
+for i, value in enumerate(items, start=1):
+    print(i, value)
+for name, score in zip(names, scores, strict=True):
+    print(name, score)
+\end{lstlisting}
+
+\begin{lstlisting}
+for key, value in data.items():
+    if value is None: continue
+    if key == target: break
+else:
+    print("no break / not found")
+\end{lstlisting}
+
+\begin{lstlisting}
+attempts = 3
+while attempts > 0:
+    if try_once(): break
+    attempts -= 1
+\end{lstlisting}
+
+\py{break} exits the nearest loop; \py{continue} skips to its next iteration. Loop \py{else} runs only when no \py{break} occurs.
+
+\section{9. Functions}
+
+\begin{lstlisting}
+def greet(name: str, greeting: str = "Hello") -> str:
+    """Return a short greeting."""
+    return f"{greeting}, {name}!"
+
+greet("Ada", greeting="Hi")
+\end{lstlisting}
+
+\textbf{Parameters} may be positional or keyword. \py{/} marks positional-only; \py{*} marks following parameters keyword-only.
+
+\begin{lstlisting}
+def clamp(x, /, low=0, high=100, *, strict=False):
+    if strict and not low <= x <= high:
+        raise ValueError(x)
+    return max(low, min(x, high))
+
+def collect(*args, **kwargs):
+    return args, kwargs           # tuple, dict
+\end{lstlisting}
+
+\begin{lstlisting}
+nums = [3, 7]
+range(*nums)                    # unpack positional args
+opts = {"sep": " - ", "end": "!\n"}
+print("a", "b", **opts)         # unpack keyword args
+\end{lstlisting}
+
+Lambdas are short expressions, best used as keys/callbacks: \py{sorted(users, key=lambda u: u["age"])}.
+
+\warn{Mutable default trap:} defaults are created once.
+
+\begin{lstlisting}
+def add(x, items=None):
+    items = [] if items is None else items
+    items.append(x)
+    return items
+\end{lstlisting}
+
+\section{10. Comprehensions and Generators}
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.32\linewidth}L@{}}
+\toprule
+\textbf{Result} & \textbf{Pattern} \\
+\midrule
+list & \py{[f(x) for x in xs if test(x)]} \\
+set & \py{\{f(x) for x in xs\}} \\
+dict & \py{\{k: f(k) for k in keys\}} \\
+generator & \py{(f(x) for x in xs)} (lazy) \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\begin{lstlisting}
+even_squares = [x*x for x in nums if x % 2 == 0]
+by_id = {u.id: u for u in users}
+total = sum(x*x for x in nums)  # no intermediate list
+flat = [x for row in matrix for x in row]
+\end{lstlisting}
+
+Prefer a normal loop when the expression needs side effects or becomes hard to scan.
+
+\section{11. Most Useful Built-ins}
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.35\linewidth}L@{}}
+\toprule
+\textbf{Call} & \textbf{Use} \\
+\midrule
+\py{len(x)} & number of items \\
+\py{range(stop)} & integer sequence (lazy) \\
+\py{enumerate(xs)} & \py{(index, value)} pairs \\
+\py{zip(a,b)} & pair corresponding items \\
+\py{sorted(xs,key=...)} & new sorted list \\
+\py{reversed(xs)} & reverse iterator \\
+\py{any(tests)} / \py{all(tests)} & some / every item truthy \\
+\py{sum(xs)} & numeric total \\
+\py{min(xs)}, \py{max(xs)} & extrema; accept \py{key=} \\
+\py{next(it, default)} & next item or default \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\begin{lstlisting}
+oldest = max(users, key=lambda u: u.age)
+has_errors = any(row.error for row in rows)
+all_valid = all(validate(x) for x in items)
+first = next((x for x in xs if test(x)), None)
+\end{lstlisting}
+
+\py{map(f, xs)} and \py{filter(test, xs)} return iterators; comprehensions are usually clearer.
+
+\section{12. Exceptions}
+
+Catch only errors you can handle; prefer specific exception types.
+
+\begin{lstlisting}
+try:
+    value = int(text)
+except ValueError as exc:
+    value = 0
+else:
+    use(value)               # conversion succeeded
+finally:
+    cleanup()                # always runs
+\end{lstlisting}
+
+\begin{lstlisting}
+if amount < 0:
+    raise ValueError("amount must be nonnegative")
+\end{lstlisting}
+
+Multiple types: \py{except (TypeError, ValueError):}. Re-raise the current exception with bare \py{raise}; preserve cause with \py{raise NewError(...) from exc}.
+
+\section{13. Files and pathlib}
+
+Context managers close files even when an error occurs. Specify text encoding.
+
+\begin{lstlisting}
+with open("data.txt", "r", encoding="utf-8") as f:
+    text = f.read()           # whole file
+with open("out.txt", "w", encoding="utf-8") as f:
+    f.write(text)
+\end{lstlisting}
+
+\py{"a"} appends; \py{"b"} selects binary data (for example \py{"rb"}). Iterate lines without loading the whole file:
+
+\begin{lstlisting}
+with open("data.txt", encoding="utf-8") as f:
+    for line in f:
+        process(line.rstrip("\n"))
+\end{lstlisting}
+
+\subsection{Prefer pathlib for paths}
+
+\begin{lstlisting}
+from pathlib import Path
+p = Path("data") / "input.txt"
+text = p.read_text(encoding="utf-8")
+Path("out.txt").write_text("Hello", encoding="utf-8")
+\end{lstlisting}
+
+\begin{lstlisting}
+p.exists(); p.is_file(); p.name; p.suffix; p.parent
+p.mkdir(parents=True, exist_ok=True)
+for file in Path(".").glob("*.py"):
+    print(file)
+\end{lstlisting}
+
+Use \py{Path.rglob("*.csv")} recursively; \py{p.rename(new)} moves/renames; \py{p.unlink(missing\_ok=True)} deletes a file.
+
+\section{14. Modules and Imports}
+
+\begin{lstlisting}
+import statistics
+import numpy as np
+from pathlib import Path
+from package.module import useful_name
+\end{lstlisting}
+
+Imports run module top-level code once and bind names. Put script entry behavior behind a guard:
+
+\begin{lstlisting}
+def main() -> None:
+    ...
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\section{15. Classes and Data Classes}
+
+\begin{lstlisting}
+class Account:
+    def __init__(self, owner: str, balance=0.0):
+        self.owner, self.balance = owner, balance
+
+    def deposit(self, amount: float) -> None:
+        self.balance += amount
+\end{lstlisting}
+
+\begin{lstlisting}
+class Savings(Account):
+    def __init__(self, owner, rate):
+        super().__init__(owner)
+        self.rate = rate
+
+    @property
+    def interest(self): return self.balance * self.rate
+\end{lstlisting}
+
+Use data classes for data containers; they generate \py{\_\_init\_\_}, equality, and a useful representation.
+
+\begin{lstlisting}
+from dataclasses import dataclass, field
+
+@dataclass(slots=True)
+class User:
+    name: str
+    tags: list[str] = field(default_factory=list)
+\end{lstlisting}
+
+\section{16. Iterators and Generators}
+
+An iterable supplies an iterator; \py{next()} pulls one value. Generators produce lazy streams and retain local state.
+
+\begin{lstlisting}
+it = iter([10, 20])
+next(it), next(it)       # 10, 20
+next(it, None)           # None (default avoids StopIteration)
+\end{lstlisting}
+
+\begin{lstlisting}
+def countdown(n):
+    while n:
+        yield n
+        n -= 1
+
+squares = (x*x for x in range(1_000_000))
+\end{lstlisting}
+
+Generators are single-use; materialize with \py{list(gen)} only when needed.
+
+\section{17. Standard Library Essentials}
+
+\subsection{collections}
+
+\begin{lstlisting}
+from collections import Counter, defaultdict, deque
+Counter("banana").most_common(2)  # [('a', 3), ('n', 2)]
+groups = defaultdict(list)
+queue = deque([1, 2]); queue.append(3); queue.popleft()
+\end{lstlisting}
+
+\subsection{heapq (min-heap / priority queue)}
+
+A heap is an ordinary list kept in heap order, so \py{h[0]} is always the smallest item. Push and pop cost $O(\log n)$ and \py{heapify} costs $O(n)$; the list as a whole is \emph{not} sorted.
+
+\begin{lstlisting}
+import heapq
+h = [5, 1, 3]
+heapq.heapify(h)          # -> [1, 5, 3], rearranged in place
+heapq.heappush(h, 2)
+smallest = heapq.heappop(h)   # 1; peek instead with h[0]
+heapq.heappushpop(h, 7)   # push then pop, in one pass
+heapq.heapreplace(h, 7)   # pop then push; heap must be non-empty
+\end{lstlisting}
+
+\begin{lstlisting}
+heapq.nsmallest(3, xs)                 # sorted; cheap for small k
+heapq.nlargest(3, words, key=len)
+list(heapq.merge(sorted_a, sorted_b))  # lazy merge of sorted inputs
+\end{lstlisting}
+
+There is no max-heap, so negate the values (or the sort key):
+
+\begin{lstlisting}
+maxh = [-x for x in xs]; heapq.heapify(maxh)
+largest = -heapq.heappop(maxh)
+\end{lstlisting}
+
+Entries are compared as whole tuples, so insert a unique tie-breaker ahead of any payload that is not orderable:
+
+\begin{lstlisting}
+from itertools import count
+tie = count()                 # unique, increasing
+heapq.heappush(pq, (priority, next(tie), task))
+priority, _, task = heapq.heappop(pq)   # lowest priority first
+\end{lstlisting}
+
+Use \py{queue.PriorityQueue} instead when several threads share the queue.
+
+\subsection{datetime}
+
+\begin{lstlisting}
+from datetime import datetime, date, timedelta, timezone
+now = datetime.now(timezone.utc); today = date.today()
+dt = datetime.strptime("2026-08-08", "%Y-%m-%d")
+dt.strftime("%d %b %Y"); tomorrow = today + timedelta(days=1)
+\end{lstlisting}
+
+Use timezone-aware datetimes for stored/shared timestamps.
+
+\subsection{json}
+
+\begin{lstlisting}
+import json
+data = json.loads('{"ok": true}')
+text = json.dumps(data, indent=2, ensure_ascii=False)
+data = json.loads(Path("data.json").read_text())
+Path("out.json").write_text(json.dumps(data, indent=2))
+\end{lstlisting}
+
+\subsection{random}
+
+\begin{lstlisting}
+import random
+n = random.randint(1, 6)       # inclusive endpoints
+item = random.choice(items)
+random.shuffle(items)          # in place
+\end{lstlisting}
+
+Use \py{secrets} rather than \py{random} for passwords, tokens, or security.
+
+\subsection{Regular expressions}
+
+Use raw strings for patterns; compile a pattern when reusing it often.
+
+\begin{lstlisting}
+import re
+m = re.search(r"\b\d+\b", text)     # first match / None
+nums = re.findall(r"\d+", text)     # all matches
+clean = re.sub(r"\s+", " ", text).strip()
+\end{lstlisting}
+
+\subsection{itertools (compact combinatorics)}
+
+\begin{lstlisting}
+from itertools import chain, product, combinations
+list(chain(xs, ys))
+product("AB", repeat=2); combinations(items, 2)
+\end{lstlisting}
+
+\section{18. Common Python Patterns}
+
+\begin{lstlisting}
+a, b = b, a                         # swap
+first, *middle, last = values       # starred unpacking
+unique = list(dict.fromkeys(items)) # dedupe, keep order
+users.sort(key=lambda u: u["age"])  # custom sort key
+\end{lstlisting}
+
+\begin{lstlisting}
+from collections import Counter
+counts = Counter(items)              # frequencies
+for i, value in enumerate(items): ...
+for a, b in zip(xs, ys): ...
+\end{lstlisting}
+
+\begin{lstlisting}
+has_large = any(x > 10 for x in nums)
+all_positive = all(x > 0 for x in nums)
+flat = [x for row in matrix for x in row]
+value = data.get("key", default)
+\end{lstlisting}
+
+\begin{lstlisting}
+# group rows by a computed key
+groups = defaultdict(list)
+for row in rows:
+    groups[row.category].append(row)
+\end{lstlisting}
+
+\begin{lstlisting}
+# EAFP: perform the normal operation, handle failure
+try: value = data[key]
+except KeyError: value = default
+\end{lstlisting}
+
+\section{19. Common Gotchas}
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.39\linewidth}L@{}}
+\toprule
+\textbf{Gotcha} & \textbf{Preferred practice} \\
+\midrule
+\py{a == b} vs. \py{a is b} & equal values vs. same object; use \py{is None} \\
+\py{xs.sort()} vs. \py{sorted(xs)} & mutates and returns \py{None} vs. returns new list \\
+mutable function defaults & use \py{None}, then create inside \\
+shallow copy & nested objects remain shared; use \py{copy.deepcopy} only when required \\
+float equality & use \py{math.isclose(a,b)} \\
+mutating during iteration & iterate over \py{xs.copy()} or build a new collection \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\begin{lstlisting}
+# BAD: rows refer to the same inner list
+grid = [[0] * 3] * 3
+# GOOD: a distinct list per row
+grid = [[0] * 3 for _ in range(3)]
+\end{lstlisting}
+
+\begin{lstlisting}
+# Filtering without modifying the traversed list
+items = [x for x in items if keep(x)]
+\end{lstlisting}
+
+\textbf{Also remember:} assignment does not copy objects; \py{list.copy()} and slicing are shallow. Avoid broad \py{except Exception} unless re-raising or at a deliberate application boundary.
+
+\end{multicols}
+\end{document}
