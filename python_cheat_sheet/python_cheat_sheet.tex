@@ -90,7 +90,7 @@
 \begin{center}
   {\color{Navy}\bfseries\fontsize{16}{17}\selectfont PYTHON 3.12+ CHEAT SHEET}\par
   \vspace{1pt}
-  {\color{CodeGray}\fontsize{9}{10}\selectfont Practical syntax, idioms, and standard-library patterns for everyday programming}
+  {\color{CodeGray}\fontsize{9}{10}\selectfont Practical syntax, idioms, and standard-library patterns for coding interviews}
 \end{center}
 \vspace{-3pt}
 
@@ -128,6 +128,27 @@ a is b                         # identical object (use: x is None)
 
 \textbf{Falsy:} \py{False}, \py{None}, numeric zero, and empty strings/containers. Everything else is truthy.
 
+\subsection{References, copies, and hashability}
+
+Names refer to objects; assignment binds another name, not a copy. \py{==} compares values; \py{is} compares identity; \py{id(obj)} identifies an object during its lifetime.
+
+\begin{lstlisting}
+a = [1, 2]; b = a
+b.append(3)                  # a is now [1, 2, 3]
+import copy
+shallow = a.copy()           # also a[:] or copy.copy(a)
+deep = copy.deepcopy(a)      # recursively copies nested objects
+\end{lstlisting}
+
+Shallow copies share nested references. Mutable: \py{list}, \py{dict}, \py{set}. Immutable: \py{int}, \py{float}, \py{bool}, \py{str}, \py{tuple}, \py{frozenset} (a tuple can still contain mutable objects).
+
+\textbf{Hashable keys/elements:} dictionaries and sets use hashing. Usually hashable: numbers, strings, \py{frozenset}, and tuples of hashable values. Lists, dicts, and sets are unhashable. \py{hash(x)} gets a hash value.
+
+\begin{lstlisting}
+d = {(1, 2): "valid"}       # tuple key
+# {[1, 2]: "invalid"}      # TypeError: unhashable list
+\end{lstlisting}
+
 \section{2. Strings}
 
 Strings are immutable Unicode sequences; operations return new strings.
@@ -152,6 +173,10 @@ len(s), "th" in s  # (6, True)
 \py{s.startswith("Py")} & prefix test \\
 \py{s.endswith(".py")} & suffix test \\
 \py{s.upper()}, \py{s.lower()} & change case \\
+\py{s.capitalize()}, \py{s.title()} & first / each word capitalized \\
+\py{s.count("a")} & count non-overlapping matches \\
+\py{s.isalpha()}, \py{s.isdigit()} & letters only / digits only \\
+\py{s.isalnum()}, \py{s.isspace()} & letters or digits / whitespace only \\
 \py{"x" in s} & substring membership \\
 \bottomrule
 \end{tabularx}
@@ -171,6 +196,8 @@ message = """A multiline string
 may span several lines."""
 raw_path = r"C:\new\data"    # backslashes stay literal
 \end{lstlisting}
+
+\py{ord("a") == 97}; \py{chr(97) == "a"}. Convert characters to/from code points for letter arithmetic.
 
 \section{3. Numbers, Math, and Bits}
 
@@ -245,7 +272,7 @@ Mutable ordered sequences; indexing and slicing match strings.
 items = ["a", "b", "c"]
 items[0], items[-1], items[1:]
 items[1] = "B"; "a" in items
-empty = []; shallow = items.copy()   # shallow copy
+empty = []; shallow = items.copy()   # see copying in Basics
 \end{lstlisting}
 
 \begin{tbl}
@@ -269,7 +296,6 @@ empty = []; shallow = items.copy()   # shallow copy
 nums = [4, 1, 3, 2]
 ordered = sorted(nums)          # new list
 nums.sort(reverse=True)         # mutate nums
-even_squares = [x*x for x in nums if x % 2 == 0]
 \end{lstlisting}
 
 Useful slices: \py{xs[:n]} first $n$; \py{xs[n:]} rest; \py{xs[::2]} every other; \py{xs[::-1]} reversed copy; \py{del xs[i:j]} delete range.
@@ -434,6 +460,50 @@ def add(x, items=None):
     return items
 \end{lstlisting}
 
+\subsection{Scope: LEGB, closures, decorators}
+
+Name lookup checks \textbf{L}ocal, \textbf{E}nclosing, \textbf{G}lobal, then \textbf{B}uilt-in. \py{global} rebinds a module name; \py{nonlocal} rebinds a name in the nearest enclosing function scope.
+
+\begin{lstlisting}
+x = 10
+def change_global():
+    global x
+    x += 1
+
+def outer():
+    y = 20
+    def inner():
+        nonlocal y
+        y += 1
+    inner()
+    return y
+\end{lstlisting}
+
+Closures capture a variable, not its value when the function is created (late binding):
+
+\begin{lstlisting}
+funcs = []
+for i in range(3):
+    funcs.append(lambda: i)
+[f() for f in funcs]         # [2, 2, 2]
+# Fix inside loop: funcs.append(lambda i=i: i)
+\end{lstlisting}
+
+\begin{lstlisting}
+from functools import wraps
+def decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        print("before")
+        return func(*args, **kwargs)
+    return wrapper
+
+@decorator
+def hello(): print("hello")
+\end{lstlisting}
+
+\py{@decorator} above \py{def f(): ...} means \py{f = decorator(f)}. \py{wraps} preserves the wrapped function's metadata.
+
 \section{10. Comprehensions and Generators}
 
 \begin{tbl}
@@ -461,20 +531,24 @@ Prefer a normal loop when the expression needs side effects or becomes hard to s
 \section{11. Most Useful Built-ins}
 
 \begin{tbl}
-\begin{tabularx}{\linewidth}{@{}R{.35\linewidth}L@{}}
+\begin{tabularx}{\linewidth}{@{}R{.40\linewidth}L@{}}
 \toprule
-\textbf{Call} & \textbf{Use} \\
+\textbf{Purpose / calls} & \textbf{Use} \\
 \midrule
-\py{len(x)} & number of items \\
-\py{range(stop)} & integer sequence (lazy) \\
-\py{enumerate(xs)} & \py{(index, value)} pairs \\
-\py{zip(a,b)} & pair corresponding items \\
-\py{sorted(xs,key=...)} & new sorted list \\
-\py{reversed(xs)} & reverse iterator \\
-\py{any(tests)} / \py{all(tests)} & some / every item truthy \\
-\py{sum(xs)} & numeric total \\
-\py{min(xs)}, \py{max(xs)} & extrema; accept \py{key=} \\
-\py{next(it, default)} & next item or default \\
+\textbf{Inspect:} \py{type(x)}, \py{isinstance(x,T)} & exact type / subclass-aware test \\
+\py{id(x)}, \py{hash(x)}, \py{len(x)} & identity / hash / size \\
+\textbf{Convert:} \py{int(x)}, \py{float(x)} & number conversions \\
+\py{str(x)}, \py{bool(x)} & text / truth conversion \\
+\py{list(x)}, \py{tuple(x)} & sequence conversion \\
+\py{set(x)}, \py{dict(x)} & unique values / mapping \\
+\py{ord(c)}, \py{chr(n)} & character / code point \\
+\textbf{Iterate:} \py{range(n)}, \py{iter(x)} & lazy range / iterator \\
+\py{next(it, default)} & next value or default \\
+\py{enumerate(xs)}, \py{zip(a,b)} & index pairs / paired items \\
+\py{reversed(xs)}, \py{sorted(xs)} & reverse iterator / sorted list \\
+\textbf{Aggregate:} \py{any(xs)}, \py{all(xs)} & some / every item truthy \\
+\py{sum(xs)}, \py{min(xs)}, \py{max(xs)} & total / extrema; extrema take \py{key=} \\
+\py{divmod(a,b)} & quotient and remainder \\
 \bottomrule
 \end{tabularx}
 \end{tbl}
@@ -529,6 +603,22 @@ with open("data.txt", encoding="utf-8") as f:
         process(line.rstrip("\n"))
 \end{lstlisting}
 
+\subsection{Custom context managers}
+
+\py{with} calls \py{\_\_enter\_\_()} on entry and \py{\_\_exit\_\_()} on exit, even after an exception. Return \py{self} from \py{\_\_enter\_\_} for the \py{as} target.
+
+\begin{lstlisting}
+class Resource:
+    def __enter__(self):
+        print("acquire")
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        print("release")
+
+with Resource() as r:
+    pass
+\end{lstlisting}
+
 \subsection{Prefer pathlib for paths}
 
 \begin{lstlisting}
@@ -545,9 +635,9 @@ for file in Path(".").glob("*.py"):
     print(file)
 \end{lstlisting}
 
-Use \py{Path.rglob("*.csv")} recursively; \py{p.rename(new)} moves/renames; \py{p.unlink(missing\_ok=True)} deletes a file.
+\py{p.rglob("*.csv")} searches recursively. \py{p.rename(new)} moves a file; \py{p.unlink(missing\_ok=True)} deletes it if present.
 
-\section{14. Modules and Imports}
+\section{14. Modules and Environments}
 
 \begin{lstlisting}
 import statistics
@@ -565,6 +655,45 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 \end{lstlisting}
+
+\subsection{Packages and \texttt{\_\_init\_\_.py}}
+
+A directory with \py{\_\_init\_\_.py} is a regular import package; the file runs on first import and can re-export names. Namespace packages may omit it.
+
+\begin{lstlisting}
+# app/__init__.py
+from .utils import helper      # re-export
+# elsewhere
+from app import helper
+\end{lstlisting}
+
+\subsection{Configuration with \texttt{.env}}
+
+\py{.env} holds \py{KEY=value} settings; Python does not load it automatically. Use third-party \py{python-dotenv}:
+
+\begin{lstlisting}
+import os
+from dotenv import load_dotenv
+load_dotenv()
+api_url = os.getenv("API_URL")   # None if unset
+\end{lstlisting}
+
+Existing environment values take precedence by default. Keep secret \py{.env} files out of version control; share a non-secret \py{.env.example} template.
+
+\subsection{Virtual environments}
+
+\py{venv} isolates each project's interpreter and installed packages. Run the commands for your platform:
+
+\begin{lstlisting}
+python3 -m venv .venv           # macOS/Linux
+py -m venv .venv                # Windows
+source .venv/bin/activate      # macOS/Linux
+.venv\Scripts\Activate.ps1     # PowerShell
+python -m pip install requests python-dotenv
+deactivate
+\end{lstlisting}
+
+Exclude \py{.venv} from version control; activate it before installing or running project code.
 
 \section{15. Classes and Data Classes}
 
@@ -587,6 +716,118 @@ class Savings(Account):
     def interest(self): return self.balance * self.rate
 \end{lstlisting}
 
+\subsection{Properties: getter and setter}
+
+\py{@property} runs a getter on attribute access; \py{@age.setter} runs a setter on assignment. Store the value under a different name to avoid recursion.
+
+\begin{lstlisting}
+class Person:
+    def __init__(self, age): self.age = age
+    @property
+    def age(self): return self._age
+    @age.setter
+    def age(self, value):
+        if value < 0: raise ValueError("age")
+        self._age = value
+
+p = Person(20)
+p.age = 21; print(p.age)       # set, then get
+\end{lstlisting}
+
+\subsection{Is-a vs. has-a}
+
+\py{Savings} \textbf{is an} \py{Account}: inheritance reuses or extends behavior. \py{Car} \textbf{has an} \py{Engine}: composition stores another object as an attribute.
+
+\begin{lstlisting}
+class Engine:
+    def start(self): ...
+
+class Car:
+    def __init__(self):
+        self.engine = Engine()    # has-a
+
+car = Car()
+car.engine.start()
+\end{lstlisting}
+
+\subsection{Polymorphism}
+
+Different subclasses can respond to the same method call in their own way:
+
+\begin{lstlisting}
+class Animal:
+    def speak(self): return "sound"
+class Dog(Animal):
+    def speak(self): return "woof"
+
+for animal in (Animal(), Dog()):
+    print(animal.speak())          # sound, woof
+\end{lstlisting}
+
+\subsection{Creation, class state, and methods}
+
+\py{MyClass()} $\rightarrow$ \py{\_\_new\_\_(cls)} $\rightarrow$ new object $\rightarrow$ \py{\_\_init\_\_(self)}. \py{cls} is the class; \py{self} is the instance. \py{\_\_new\_\_} creates/returns an instance; \py{\_\_init\_\_} initializes the already-created instance.
+
+\begin{lstlisting}
+class Test:
+    a = 100                       # class variable
+    def __init__(self):
+        self.b = 200              # instance variable
+
+x = Test(); y = Test()
+x.c = 300                         # dynamic instance attribute
+\end{lstlisting}
+
+\py{Test.a} is shared unless shadowed by \py{x.a = ...}; \py{x.b} and \py{y.b} belong to separate objects. Define \py{\_\_slots\_\_} to restrict allowed instance attributes.
+
+\begin{lstlisting}
+class MyClass:
+    def method(self): ...        # receives instance
+    @classmethod
+    def create(cls): return cls() # receives class
+    @staticmethod
+    def helper(x): return x * 2  # receives neither
+\end{lstlisting}
+
+\subsection{Important dunder methods}
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.39\linewidth}L@{}}
+\toprule
+\textbf{Method} & \textbf{Triggered by / role} \\
+\midrule
+\py{\_\_new\_\_}, \py{\_\_init\_\_} & \py{C()} creates, then initializes \\
+\py{\_\_str\_\_} & \py{print(obj)}, \py{str(obj)} \\
+\py{\_\_repr\_\_} & \py{repr(obj)}, interactive display \\
+\py{\_\_eq\_\_} & \py{a == b} \\
+\py{\_\_hash\_\_} & \py{hash(obj)}, dict/set lookup \\
+\py{\_\_len\_\_} & \py{len(obj)} \\
+\py{\_\_getitem\_\_} & \py{obj[i]} \\
+\py{\_\_setitem\_\_} & \py{obj[i] = x} \\
+\py{\_\_iter\_\_} & \py{iter(obj)}, \py{for} \\
+\py{\_\_next\_\_} & \py{next(obj)} \\
+\py{\_\_call\_\_} & \py{obj()} \\
+\py{\_\_enter\_\_}, \py{\_\_exit\_\_} & \py{with obj as x:} \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+\subsection{Singleton (interview pattern)}
+
+\begin{lstlisting}
+class Singleton:
+    _instance = None
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+a = Singleton(); b = Singleton()
+a is b                           # True
+\end{lstlisting}
+
+\py{\_\_new\_\_} returns the same object on later calls; \py{\_\_init\_\_} still runs each time unless guarded. A module often supplies shared state without a Singleton class.
+
 Use data classes for data containers; they generate \py{\_\_init\_\_}, equality, and a useful representation.
 
 \begin{lstlisting}
@@ -600,13 +841,28 @@ class User:
 
 \section{16. Iterators and Generators}
 
-An iterable supplies an iterator; \py{next()} pulls one value. Generators produce lazy streams and retain local state.
+An \emph{iterable} produces an iterator with \py{iter(obj)}; \emph{iterator} returns itself from \py{\_\_iter\_\_} and supplies values with \py{\_\_next\_\_}. Flow: iterable $\rightarrow$ \py{iter(obj)} $\rightarrow$ iterator $\rightarrow$ \py{next(it)} $\rightarrow$ value (or \py{StopIteration}).
 
 \begin{lstlisting}
 it = iter([10, 20])
 next(it), next(it)       # 10, 20
 next(it, None)           # None (default avoids StopIteration)
 \end{lstlisting}
+
+\begin{lstlisting}
+class Counter:
+    def __init__(self, n):
+        self.n, self.i = n, 0
+    def __iter__(self):
+        return self
+    def __next__(self):
+        if self.i >= self.n:
+            raise StopIteration
+        self.i += 1
+        return self.i
+\end{lstlisting}
+
+Generators produce lazy streams and retain local state:
 
 \begin{lstlisting}
 def countdown(n):
@@ -650,12 +906,14 @@ heapq.nlargest(3, words, key=len)
 list(heapq.merge(sorted_a, sorted_b))  # lazy merge of sorted inputs
 \end{lstlisting}
 
-There is no max-heap, so negate the values (or the sort key):
+\textbf{Python 3.12--3.13:} negate numbers (or a sort key) for a max-heap:
 
 \begin{lstlisting}
 maxh = [-x for x in xs]; heapq.heapify(maxh)
 largest = -heapq.heappop(maxh)
 \end{lstlisting}
+
+\textbf{Python 3.14+:} \py{heapq} also has \py{heapify\_max}, \py{heappush\_max}, and \py{heappop\_max}.
 
 Entries are compared as whole tuples, so insert a unique tie-breaker ahead of any payload that is not orderable:
 
@@ -719,53 +977,142 @@ list(chain(xs, ys))
 product("AB", repeat=2); combinations(items, 2)
 \end{lstlisting}
 
-\section{18. Common Python Patterns}
+\subsection{functools (memoization and helpers)}
+
+\begin{lstlisting}
+from functools import lru_cache, cache, wraps, partial, reduce
+
+@cache                       # or @lru_cache(None)
+def dp(i):
+    ...                      # recursive subproblem
+\end{lstlisting}
+
+Memoization turns repeated recursive subproblems into cached lookups; use hashable arguments. \py{wraps} preserves decorator metadata; \py{partial(f, x)} fixes arguments; \py{reduce(f, xs)} folds a sequence.
+
+\subsection{bisect (sorted-list search)}
+
+\begin{lstlisting}
+import bisect
+nums = [1, 3, 5, 7]
+bisect.bisect_left(nums, 5)     # 2: before equals
+bisect.bisect_right(nums, 5)    # 3: after equals
+bisect.insort(nums, 4)          # keep list sorted
+\end{lstlisting}
+
+Search position: $O(\log n)$; inserting into a list still costs $O(n)$.
+
+\section{18. Working with Data and APIs}
+
+\subsection{Web communication}
+
+Client $\rightarrow$ HTTP request (method, URL, headers, optional body) $\rightarrow$ server $\rightarrow$ response (status, headers, body). \py{GET} reads; \py{POST} submits. Status: \py{2xx} success, \py{4xx} client error, \py{5xx} server error.
+
+\subsection{HTTP requests and JSON}
+
+\py{requests} is a third-party package; \py{json=} encodes a request body. The \py{json.loads/dumps} examples above use the standard library.
+
+\begin{lstlisting}
+import requests
+url = "https://api.example.com/items"
+params = {"q": "py"}
+r = requests.get(url, params=params, timeout=5)
+r.raise_for_status()          # fail on 4xx / 5xx
+items = r.json()              # decode JSON
+payload = {"name": "Ada"}
+r = requests.post(url, json=payload, timeout=5)
+r.raise_for_status()
+\end{lstlisting}
+
+\subsection{Network errors and resilience}
+
+Exception classes below are in \py{requests.exceptions}.
+
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.44\linewidth}L@{}}
+\toprule
+\textbf{Exception} & \textbf{Meaning} \\
+\midrule
+\py{Timeout} & response took too long \\
+\py{ConnectionError} & connection / DNS failure \\
+\py{HTTPError} & bad status via \py{raise\_for\_status()} \\
+\py{JSONDecodeError} & invalid JSON response \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+Set a timeout. Retry idempotent requests after timeouts, \py{429}, or transient \py{5xx} with bounded backoff; respect \py{Retry-After}. Do not blindly retry \py{POST}, which may duplicate a write.
+
+\subsection{Storing data with SQLite}
+
+\begin{lstlisting}
+import sqlite3
+con = sqlite3.connect("app.db")
+schema = "CREATE TABLE IF NOT EXISTS t(name)"
+try:
+    with con:                 # commit or rollback
+        con.execute(schema)
+        sql = "INSERT INTO t VALUES (?)"
+        con.execute(sql, ("Ada",))
+        cur = con.execute("SELECT name FROM t")
+        row = cur.fetchone()
+finally:
+    con.close()
+\end{lstlisting}
+
+Use \py{?} placeholders for data values, never string formatting in SQL. \py{fetchone()} returns one row or \py{None}; \py{fetchall()} returns all rows. \py{with con} does not close it.
+
+\section{19. Common Python Patterns}
 
 \begin{lstlisting}
 a, b = b, a                         # swap
-first, *middle, last = values       # starred unpacking
 unique = list(dict.fromkeys(items)) # dedupe, keep order
-users.sort(key=lambda u: u["age"])  # custom sort key
 \end{lstlisting}
 
-\begin{lstlisting}
-from collections import Counter
-counts = Counter(items)              # frequencies
-for i, value in enumerate(items): ...
-for a, b in zip(xs, ys): ...
-\end{lstlisting}
+\subsection{Stack and queue}
 
 \begin{lstlisting}
-has_large = any(x > 10 for x in nums)
-all_positive = all(x > 0 for x in nums)
-flat = [x for row in matrix for x in row]
-value = data.get("key", default)
+stack = []
+stack.append(x); x = stack.pop()   # LIFO
+
+from collections import deque
+q = deque()
+q.append(x); x = q.popleft()       # FIFO / BFS
 \end{lstlisting}
 
-\begin{lstlisting}
-# group rows by a computed key
-groups = defaultdict(list)
-for row in rows:
-    groups[row.category].append(row)
-\end{lstlisting}
+\begin{tbl}
+\begin{tabularx}{\linewidth}{@{}R{.49\linewidth}L@{}}
+\toprule
+\textbf{Operation} & \textbf{Cost} \\
+\midrule
+\py{list.append(x)}, \py{list.pop()} & $O(1)$ amortized / $O(1)$ \\
+\py{list.pop(0)} & $O(n)$ \\
+\py{deque.append(x)}, \py{appendleft(x)} & $O(1)$ \\
+\py{deque.pop()}, \py{popleft()} & $O(1)$ \\
+\py{x in list} / \py{x in set/dict} & $O(n)$ / average $O(1)$ \\
+list indexing / dict lookup & $O(1)$ / average $O(1)$ \\
+heap push/pop / sorting & $O(\log n)$ / $O(n\log n)$ \\
+\bottomrule
+\end{tabularx}
+\end{tbl}
+
+Use \py{deque} for BFS queues, \py{heapq} for priority queues, \py{Counter} for frequencies, and \py{defaultdict(list)} for grouping or adjacency lists. Dicts and sets rely on hashing.
+
+\subsection{EAFP: handle expected failures}
 
 \begin{lstlisting}
-# EAFP: perform the normal operation, handle failure
 try: value = data[key]
 except KeyError: value = default
 \end{lstlisting}
 
-\section{19. Common Gotchas}
+\section{20. Common Gotchas}
 
 \begin{tbl}
 \begin{tabularx}{\linewidth}{@{}R{.39\linewidth}L@{}}
 \toprule
 \textbf{Gotcha} & \textbf{Preferred practice} \\
 \midrule
-\py{a == b} vs. \py{a is b} & equal values vs. same object; use \py{is None} \\
 \py{xs.sort()} vs. \py{sorted(xs)} & mutates and returns \py{None} vs. returns new list \\
 mutable function defaults & use \py{None}, then create inside \\
-shallow copy & nested objects remain shared; use \py{copy.deepcopy} only when required \\
 float equality & use \py{math.isclose(a,b)} \\
 mutating during iteration & iterate over \py{xs.copy()} or build a new collection \\
 \bottomrule
@@ -784,7 +1131,7 @@ grid = [[0] * 3 for _ in range(3)]
 items = [x for x in items if keep(x)]
 \end{lstlisting}
 
-\textbf{Also remember:} assignment does not copy objects; \py{list.copy()} and slicing are shallow. Avoid broad \py{except Exception} unless re-raising or at a deliberate application boundary.
+Avoid broad \py{except Exception} unless re-raising or at a deliberate application boundary.
 
 \end{multicols}
 \end{document}
